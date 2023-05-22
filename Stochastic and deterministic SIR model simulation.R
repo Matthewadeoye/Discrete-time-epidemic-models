@@ -1,6 +1,6 @@
 
 #First trial
-Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma){
+Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma,step_size){
   S<- numeric() #create empty vector to store simulations for susceptibles
   I<- numeric() #create empty vector to store simulations for infectives
   R<- numeric() #create empty vector to store simulations for removed
@@ -10,27 +10,24 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma){
   t<- time           #vector of time
   b<- beta           #infection rate
   g<- gamma          #recovery rate
+  h<- step_size      #time discretization
   #loop and update compartments
   for(tym in 2:length(t)){
-    S[tym]<- S[tym-1]-b*S[tym-1]*I[tym-1]
-    I[tym]<- I[tym-1]+b*S[tym-1]*I[tym-1]-g*I[tym-1]
-    R[tym]<- R[tym-1]+g*I[tym-1]
+    S[tym]<- S[tym-1]-(b*S[tym-1]*I[tym-1])*h
+    I[tym]<- I[tym-1]+(b*S[tym-1]*I[tym-1]-g*I[tym-1])*h
+    R[tym]<- R[tym-1]+g*I[tym-1]*h
   }
   #results
   simulations <- data.frame(t = time, S = S, I = I, R = R)
   
-  library(ggplot2)
-  graph<- ggplot(simulations, aes(x = t)) +
-    geom_line(aes(y = S, color = "Susceptible")) +
-    geom_line(aes(y = I, color = "Infected")) +
-    geom_line(aes(y = R, color = "Recovered")) +
-    labs(x = "Time", y = "Population", title = "Discrete-time deterministic SIR Model") +
-    scale_color_manual(values = c("blue", "red", "green"),
-                       labels = c("Susceptible", "Infected", "Recovered")) +
-    theme_minimal()
-  return (list(simulations, graph))
+  graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model1")
+lines(time, I, col = "red")
+lines(time, R, col = "green")
+legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
+  
+return (list(simulations, graph))
 }
-Deterministic_DT_SIR_model1(N=11000,S0=10000,I0=1000,time=(1:400),beta=0.0001,gamma=0.05)
+Deterministic_DT_SIR_model1(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,gamma=0.05,step_size=0.03)
 
 
 #Second trial assuming infections occur at the point of a Poisson process
@@ -41,7 +38,7 @@ R<- numeric() #create empty vector to store simulations for removed
 b<- beta
 g<- gamma
 t <- time  # A vector of total time period
-h <- step_size   # Time discretization step size 
+h <- step_size   # Time discretization 
 total_steps<- length(time)  #Total number of simulations 
 
 # The initial susceptibe, infected and recovered at the start
@@ -60,25 +57,20 @@ R[tym]<- R[tym-1] + I[tym-1]*(1-exp(-g*h))
 #results
 simulations <- data.frame(t = time, S = S, I = I, R = R)
 
-library(ggplot2)
-graph<- ggplot(simulations, aes(x = t)) +
-  geom_line(aes(y = S, color = "Susceptible")) +
-  geom_line(aes(y = I, color = "Infected")) +
-  geom_line(aes(y = R, color = "Recovered")) +
-  labs(x = "Time", y = "Population", title = "Discrete-time deterministic SIR Model") +
-  scale_color_manual(values = c("blue", "red", "green"),
-                     labels = c("Susceptible", "Infected", "Recovered")) +
-  theme_minimal()
+graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model2")
+lines(time, I, col = "red")
+lines(time, R, col = "green")
+legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
 return (list(simulations, graph))
 }
-Deterministic_DT_SIR_model2(N=11000,S0=10000,I0=1000,time=(1:400),beta=0.0001,gamma=0.05,step_size=1)
+Deterministic_DT_SIR_model2(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,gamma=0.05,step_size=0.03)
 
 
 
 #Stochastic simulation
 Stochastic_DT_SIR_model<- function(N,S0,I0,time,beta,gamma,step_size){
-t <- time  # Total period in days
-h <- step_size  # Time discretization step size
+t <- time  # Total time period vector
+h <- step_size  # Time discretization
 total_steps <- length(t)  # Total number of time steps
 
 # Initialize compartments
@@ -110,17 +102,14 @@ for (tym in 2:total_steps) {
 }
 simulations <- data.frame(t = time, S = S, I = I, R = R)
 
-library(ggplot2)
-graph<- ggplot(simulations, aes(x = t)) +
-  geom_line(aes(y = S, color = "Susceptible")) +
-  geom_line(aes(y = I, color = "Infected")) +
-  geom_line(aes(y = R, color = "Recovered")) +
-  labs(x = "Time", y = "Population", title = "Discrete-time deterministic SIR Model") +
-  scale_color_manual(values = c("blue", "red", "green"),
-                     labels = c("Susceptible", "Infected", "Recovered")) +
-  theme_minimal()
-return (list(simulations, graph))
+
+graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Stochastic discrete-time SIR Model")
+lines(time, I, col = "red")
+lines(time, R, col = "green")
+legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
+  
+ return (list(simulations, graph))
 }
-Stochastic_DT_SIR_model(N=11000,S0=10000,I0=1000,time=(1:400),beta=0.0001,gamma=0.05,step_size=1)
+Stochastic_DT_SIR_model(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,gamma=0.05,step_size=0.03)
   
 
