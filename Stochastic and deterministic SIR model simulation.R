@@ -1,4 +1,4 @@
-#First trial
+#First version
 Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=TRUE){
   minTime<- minTime           #start time
   maxTime<- maxTime         #end time
@@ -35,7 +35,7 @@ Deterministic_DT_SIR_model1(N=1000,S0=900,I0=100,minTime=1,maxTime=100,beta=0.00
 
 
 
-#Second trial assuming infections occur at the point of a Poisson process
+#Second version assuming infections occur at the point of a Poisson process
 Deterministic_DT_SIR_model2<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=TRUE){
   minTime<- minTime           #start time
   maxTime<- maxTime           #end time
