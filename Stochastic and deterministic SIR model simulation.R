@@ -8,21 +8,22 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma,step_size){
   I[1]<- I0   #initial number of infectives
   R[1]<- N-S0-I0      #initial number of Removed
   t<- time           #vector of time
+  h<- step_size      #step size
+  steps<- seq(min(t),max(t),by=h)   #time discretization
   b<- beta           #infection rate
   g<- gamma          #recovery rate
-  h<- step_size      #time discretization
   #loop and update compartments
-  for(tym in 2:length(t)){
+  for(tym in 2:length(steps)){
     S[tym]<- S[tym-1]-(b*S[tym-1]*I[tym-1])*h
     I[tym]<- I[tym-1]+(b*S[tym-1]*I[tym-1]-g*I[tym-1])*h
     R[tym]<- R[tym-1]+g*I[tym-1]*h
   }
   #results
-  simulations <- data.frame(t = time, S = S, I = I, R = R)
+  simulations <- data.frame(S = S, I = I, R = R)
   
-  graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model1")
-lines(time, I, col = "red")
-lines(time, R, col = "green")
+  graph<- plot(steps, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model1")
+lines(steps, I, col = "red")
+lines(steps, R, col = "green")
 legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
   
 return (list(simulations, graph))
@@ -37,9 +38,9 @@ I<- numeric() #create empty vector to store simulations for infectives
 R<- numeric() #create empty vector to store simulations for removed
 b<- beta
 g<- gamma
-t <- time  # A vector of total time period
-h <- step_size   # Time discretization 
-total_steps<- length(time)  #Total number of simulations 
+t<- time           #vector of time
+h<- step_size      #step size
+steps<- seq(min(t),max(t),by=h)   #time discretization
 
 # The initial susceptibe, infected and recovered at the start
 S[1] <- S0
@@ -47,7 +48,7 @@ I[1] <- I0
 R[1] <- N-S0-I0
 
 #Loop through discretized time and Update the compartments at each step
-for (tym in 2:total_steps){
+for (tym in 2:length(steps)){
 #Assuming infections occur at the point of a Poisson process
 S[tym]<- S[tym-1] - S[tym-1]*(1-exp(-b*I[tym-1]*h))
 I[tym]<- I[tym-1] + S[tym-1]*(1-exp(-b*I[tym-1]*h))-I[tym-1]*(1-exp(-g*h))
@@ -55,11 +56,11 @@ R[tym]<- R[tym-1] + I[tym-1]*(1-exp(-g*h))
 }
 
 #results
-simulations <- data.frame(t = time, S = S, I = I, R = R)
+simulations <- data.frame(S = S, I = I, R = R)
 
-graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model2")
-lines(time, I, col = "red")
-lines(time, R, col = "green")
+graph<- plot(steps, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model2")
+lines(steps, I, col = "red")
+lines(steps, R, col = "green")
 legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
 return (list(simulations, graph))
 }
@@ -69,9 +70,9 @@ Deterministic_DT_SIR_model2(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,g
 
 #Stochastic simulation
 Stochastic_DT_SIR_model<- function(N,S0,I0,time,beta,gamma,step_size){
-t <- time  # Total time period vector
-h <- step_size  # Time discretization
-total_steps <- length(t)  # Total number of time steps
+t<- time           #vector of time
+h<- step_size      #step size
+steps<- seq(min(t),max(t),by=h)   #time discretization
 
 # Initialize compartments
 S <- numeric()
@@ -86,7 +87,7 @@ I[1] <- I0
 R[1] <- N-S0-I0
 
 # Simulation loop
-for (tym in 2:total_steps) {
+for (tym in 2:length(steps)) {
   # Assuming infections occur at the point of a Poisson process
   p_I <- 1 - exp(-b * I[tym-1] * h)  # Probability of infection
   p_R <- 1 - exp(-g * h)  # Probability of recovery
@@ -100,12 +101,12 @@ for (tym in 2:total_steps) {
   I[tym] <- I[tym-1] + delta_S - delta_I
   R[tym] <- R[tym-1] + delta_I
 }
-simulations <- data.frame(t = time, S = S, I = I, R = R)
+simulations <- data.frame(S = S, I = I, R = R)
 
 
-graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Stochastic discrete-time SIR Model")
-lines(time, I, col = "red")
-lines(time, R, col = "green")
+graph<- plot(steps, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Stochastic discrete-time SIR Model")
+lines(steps, I, col = "red")
+lines(steps, R, col = "green")
 legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
   
  return (list(simulations, graph))
