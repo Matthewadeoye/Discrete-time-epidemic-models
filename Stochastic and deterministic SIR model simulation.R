@@ -1,5 +1,5 @@
 
-#First trial
+#First version
 Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma,step_size){
   S<- numeric() #create empty vector to store simulations for susceptibles
   I<- numeric() #create empty vector to store simulations for infectives
@@ -23,14 +23,14 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,time,beta,gamma,step_size){
   graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model1")
 lines(time, I, col = "red")
 lines(time, R, col = "green")
-legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
+legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
   
 return (list(simulations, graph))
 }
 Deterministic_DT_SIR_model1(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,gamma=0.05,step_size=0.03)
 
 
-#Second trial assuming infections occur at the point of a Poisson process
+#Second version assuming infections occur at the point of a Poisson process
 Deterministic_DT_SIR_model2<- function(N,S0,I0,time,beta,gamma,step_size){
 S<- numeric() #create empty vector to store simulations for susceptibles
 I<- numeric() #create empty vector to store simulations for infectives
@@ -60,7 +60,7 @@ simulations <- data.frame(t = time, S = S, I = I, R = R)
 graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Deterministic discrete-time SIR Model2")
 lines(time, I, col = "red")
 lines(time, R, col = "green")
-legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
+legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
 return (list(simulations, graph))
 }
 Deterministic_DT_SIR_model2(N=11000,S0=10000,I0=1000,time=(1:1000),beta=0.0001,gamma=0.05,step_size=0.03)
@@ -106,7 +106,7 @@ simulations <- data.frame(t = time, S = S, I = I, R = R)
 graph<- plot(time, S, type = "l", col = "blue", xlab = "Time", ylab = "Population", main = "Stochastic discrete-time SIR Model")
 lines(time, I, col = "red")
 lines(time, R, col = "green")
-legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
+legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
   
  return (list(simulations, graph))
 }
