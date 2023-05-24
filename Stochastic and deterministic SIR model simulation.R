@@ -1,6 +1,6 @@
 
 #First version
-Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=TRUE){
+Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=FALSE){
   minTime<- minTime           #start time
   maxTime<- maxTime         #end time
   step_size<- step_size      #step size
@@ -32,12 +32,12 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_s
   return(list(simulations=simulations))
 }
 }
-Deterministic_DT_SIR_model1(N=1000,S0=900,I0=100,minTime=1,maxTime=100,beta=0.001,gamma=0.05, step_size=0.03,plot=T)
+Deterministic_DT_SIR_model1(N=1000,S0=900,I0=100,minTime=1,maxTime=100,beta=0.001,gamma=0.05, step_size=0.03,plot=F)
 
 
 
 #Second version assuming infections occur at the point of a Poisson process
-Deterministic_DT_SIR_model2<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=TRUE){
+Deterministic_DT_SIR_model2<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=FALSE){
   minTime<- minTime           #start time
   maxTime<- maxTime           #end time
   step_size<- step_size      #step size
@@ -69,12 +69,12 @@ Deterministic_DT_SIR_model2<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_s
   return(list(simulations=simulations))
 }
 }
-Deterministic_DT_SIR_model2(N=1000,S0=900,I0=100,minTime=1,maxTime=365,beta=0.0001,gamma=0.05,step_size=0.03,plot=T)
+Deterministic_DT_SIR_model2(N=1000,S0=900,I0=100,minTime=1,maxTime=365,beta=0.0001,gamma=0.05,step_size=0.03,plot=F)
 
 
 
 #Stochastic simulation
-Stochastic_DT_SIR_model<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=TRUE){
+Stochastic_DT_SIR_model<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,plot=FALSE){
   minTime<- minTime           #start time
   maxTime<- maxTime         #end time
   step_size<- step_size      #step size
@@ -114,4 +114,4 @@ Stochastic_DT_SIR_model<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_size,
   return(list(simulations=simulations))
 }
 }
-Stochastic_DT_SIR_model(N=1000,S0=900,I0=100,minTime=1,maxTime=365,beta=0.0001,gamma=0.05,step_size=0.03,plot=T)
+Stochastic_DT_SIR_model(N=1000,S0=900,I0=100,minTime=1,maxTime=365,beta=0.0001,gamma=0.05,step_size=0.03,plot=F)
