@@ -25,7 +25,6 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_s
   lines(steps, I, col = "red")
   lines(steps, R, col = "green")
   legend("topright", legend = c("Susceptible", "Infected", "Removed"), col = c("blue", "red", "green"), lty = 1)
-  
   return (list(simulations, graph))
 }else{
   return(list(simulations=simulations))
