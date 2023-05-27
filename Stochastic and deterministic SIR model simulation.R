@@ -30,7 +30,7 @@ Deterministic_DT_SIR_model1<- function(N,S0,I0,minTime,maxTime,beta,gamma,step_s
   return(list(simulations=simulations))
 }
 }
-Deterministic_DT_SIR_model1(N=1000,S0=900,I0=100,minTime=1,maxTime=100,beta=0.001,gamma=0.05, step_size=0.03,plot=F)
+Deterministic_DT_SIR_model1(N=1000,S0=900,I0=100,minTime=1,maxTime=365,beta=0.0001,gamma=0.05, step_size=0.003,plot=F)
 
 
 
