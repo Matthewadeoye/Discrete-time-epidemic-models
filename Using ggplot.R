@@ -88,9 +88,9 @@ for (i in 1:plots) {
 
 deterministic <- Deterministic_DT_SIR_model2(N, S0, I0, minTime, maxTime, beta, gamma, step_size)
 Bind_plots <- Stoch +
-  geom_line(data = deterministic, aes(x = Steps, y = S, color = "Susceptible")) +
-  geom_line(data = deterministic, aes(x = Steps, y = I, color = "Infectious")) +
-  geom_line(data = deterministic, aes(x = Steps, y = R, color = "Recovered")) +
-  scale_color_manual(values = c("Susceptible" = "blue", "Infectious" = "red", "Recovered" = "#013220")) +
+  geom_line(data = deterministic, aes(x = Steps, y = S, color = "Susceptibles")) +
+  geom_line(data = deterministic, aes(x = Steps, y = I, color = "Infectives")) +
+  geom_line(data = deterministic, aes(x = Steps, y = R, color = "Removed")) +
+  scale_color_manual(values = c("Susceptible" = "blue", "Infectives" = "red", "Removed" = "#013220")) +
   labs(color="Compartments")
 Bind_plots
