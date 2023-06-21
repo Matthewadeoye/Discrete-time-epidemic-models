@@ -99,15 +99,6 @@ data.frame(observed_data,predicted_data$R, Initpredicted_data$R)
 
 
 
-pdf(file="C:/Users/Matthew Adeoye/Documents/const.pdf", width=8, height=8)
-D
-dev.off()
-
-figure <- ggarrange(A, B, C, D,
-                    labels = c("A", "B", "C", "D"),
-                    ncol = 2, nrow = 2)
-figure
-
 #Manual Search
 # Define the objective function
 objective_function <- function(params) {
@@ -144,3 +135,4 @@ ggplot(data = grid) +
 row_index <- which(grid$z == min(grid$z))
 # Print the row index
 print(row_index)
+
