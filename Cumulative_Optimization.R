@@ -39,8 +39,6 @@ simulated_data <- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, beta, 
 observed_data <- data.frame(
   Steps = simulated_data$Steps,
   Removals= c(0,cumsum(rpois(length(simulated_data$Steps)-1, diff(simulated_data$R))))
-  #Removals = cumsum(rbinom(length(simulated_data$R), size = 1, prob = simulated_data$R / N)) # Cumulative observed removals using Binomial 
-  #Removals = cumsum(rpois(length(simulated_data$R), lambda = simulated_data$R)) # Cumulative observed removals with Poisson noise
 )
 
 
@@ -58,8 +56,9 @@ objective_function <- function(params) {
   OLS = sum((model_data$R - observed_data$Removals)^2)
   
   #Alternatively using MLE
-  #NLL= -sum(log(dnorm(observed_data$Removals, mean=model_data$R, sd=0.1*mean(observed_data$Removals)))) #Assuming a Gaussian error term
-  #NLL2 = -sum(log(dpois(round(observed_data$Removals/10000),round(model_data$R/10000)))) #Assuming observed Removals follows a Poisson distribution
+  #NLL = -sum(log(dpois(round(observed_data$Removals/100),model_data$R/100))) #Assuming observed Removal follow a Poisson distribution
+  
+  #return(NLL)
   return(OLS)
 }
 
