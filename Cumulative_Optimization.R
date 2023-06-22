@@ -56,7 +56,7 @@ objective_function <- function(params) {
   OLS = sum((model_data$R - observed_data$Removals)^2)
   
   #Alternatively using MLE
-  #NLL = -sum(log(dpois(round(observed_data$Removals/100),model_data$R/100))) #Assuming observed Removal follow a Poisson distribution
+  #NLL = -sum(log(dpois(round(observed_data$Removals/100),model_data$R/100))) #Assuming observed Removals follow a Poisson distribution
   
   #return(NLL)
   return(OLS)
