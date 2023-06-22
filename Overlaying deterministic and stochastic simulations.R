@@ -85,10 +85,10 @@ lines(deterministic$Steps, deterministic$I, col = "red", lwd=2.0)
 lines(deterministic$Steps, deterministic$R, col = "#013220", lwd=2.0)
 legend("topright", legend = c("Susceptible", "Infected", "Recovered"), col = c("blue", "red", "green"), lty = 1)
 
-library(gridGraphics)
-library(cowplot)
-plot_grid(A, B)
-plot_grid(C, D)
+#library(gridGraphics)
+#library(cowplot)
+#plot_grid(A, B)
+#plot_grid(C, D)
 
 #Frequency-dependent formulation
 # Stochastic simulation
