@@ -91,6 +91,6 @@ Bind_plots <- Stoch +
   geom_line(data = deterministic, aes(x = Steps, y = S, color = "Susceptibles")) +
   geom_line(data = deterministic, aes(x = Steps, y = I, color = "Infectives")) +
   geom_line(data = deterministic, aes(x = Steps, y = R, color = "Removed")) +
-  scale_color_manual(values = c("Susceptible" = "blue", "Infectives" = "red", "Removed" = "#013220")) +
+  scale_color_manual(values = c("Susceptibles" = "blue", "Infectives" = "red", "Removed" = "#013220")) +
   labs(color="Compartments")
 Bind_plots
