@@ -49,7 +49,7 @@ model <- function(params) {
 
 
 # Define acceptance threshold
-epsilon <- 60
+epsilon <- 20
 
 # Define number of iterations
 num_iterations <- 150000
@@ -62,15 +62,15 @@ distance <- function(x, y) {
   return(sqrt(sum(((x - y)^2) / (y + 1))))
 }
 
-# Generate arbitrary initial parameter values
-chain[1, ] <- runif(2)
+# Initialize parameter values
+chain[1,]<- c(beta,gamma)
 
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the prior distributions
-  proposed_params <- rnorm(2, chain[i - 1, ], c(0.6, 0.5))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
   
- 
+  
   # Generate synthetic data based on the proposed parameters
   synthetic_data <- model(proposed_params)
   
@@ -96,7 +96,7 @@ for (i in 2:num_iterations) {
   
   mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current) * likelihood
   
-  # Accept or reject the proposal
+  # Accept or reject the proposals
   if (!is.na(mh.prob) && runif(1) < mh.prob) {
     chain[i, ] <- proposed_params
   } else {
@@ -119,6 +119,7 @@ mean(infection.rate)
 mean(recovery.rate)
 
 
+
 ###########################################################################################################
 
 # Approximate Bayesian Computation Markov chain Monte Carlo for Discrete-time Stochastic SIR model
@@ -135,7 +136,7 @@ beta <- 0.0001    # Infection rate
 gamma <- 0.05     # Recovery rate
 step_size <- 1    # Step size for time discretization
 
-# Define the Discrete-Time Deterministic SIR Model
+# Define the Discrete-Time Stochastic SIR Model
 ST_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
   Steps <- seq(minTime, maxTime, by = step_size)   # Time discretization
   S <- numeric(length(Steps))   # Vector to store susceptibles
@@ -179,7 +180,7 @@ model <- function(params) {
 }
 
 # Define acceptance threshold
-epsilon <- 60
+epsilon <- 20
 
 # Define number of iterations
 num_iterations <- 150000
@@ -192,13 +193,13 @@ distance <- function(x, y) {
   return(sqrt(sum(((x - y)^2) / (y + 1))))
 }
 
-# Generate arbitrary initial parameter values
-chain[1, ] <- runif(2)
+# Initialize parameter values
+chain[1,]<-c(beta,gamma)
 
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
-  # Generate parameter proposals from the prior distributions
-  proposed_params <- rnorm(2, chain[i - 1, ], c(0.6, 0.5))
+  # Generate parameter proposals from the proposal kernels
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
   
   
   # Generate synthetic data based on the proposed parameters
@@ -207,7 +208,7 @@ for (i in 2:num_iterations) {
   # Calculate the distance metric between synthetic and observed data
   metric <- distance(synthetic_data, Observed_data)
   
-  # Compute based on the distance
+  # Compute likelihood value based on the distance
   if (!is.na(metric) && metric <= epsilon) {
     likelihood <- 1
   } else {
@@ -226,7 +227,7 @@ for (i in 2:num_iterations) {
   
   mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current) * likelihood
   
-  # Accept or reject the proposal
+  # Accept or reject the proposals
   if (!is.na(mh.prob) && runif(1) < mh.prob) {
     chain[i, ] <- proposed_params
   } else {

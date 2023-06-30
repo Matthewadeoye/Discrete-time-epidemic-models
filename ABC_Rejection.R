@@ -60,7 +60,7 @@ distance <- function(x, y) {
   return(sqrt(sum(((x - y)^2) / (y + 1))))
 }
 
-# Generate initial parameter values from the prior distributions
+# Define prior distributions
 prior_dist <- function(n) {
   beta_samples <- runif(n, 0, 0.001)  # Uniform prior between 0 and 0.001
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
@@ -122,7 +122,7 @@ beta <- 0.0001    # Infection rate
 gamma <- 0.05     # Recovery rate
 step_size <- 1    # Step size for time discretization
 
-# Define the Discrete-Time Deterministic SIR Model
+# Define the Discrete-Time Stochastic SIR Model
 ST_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
   Steps <- seq(minTime, maxTime, by = step_size)   # Time discretization
   S <- numeric(length(Steps))   # Vector to store susceptibles
@@ -179,7 +179,7 @@ distance <- function(x, y) {
   return(sqrt(sum(((x - y)^2) / (y + 1))))
 }
 
-# Generate initial parameter values from the prior distributions
+# Define prior distributions
 prior_dist <- function(n) {
   beta_samples <- runif(n, 0, 0.001)  # Uniform prior between 0 and 0.001
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
