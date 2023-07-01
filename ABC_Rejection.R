@@ -1,5 +1,6 @@
 # Approximate Bayesian Computation Rejection Sampling for Discrete-time Deterministic SIR model
 
+start_time <- Sys.time()
 set.seed(8)
 
 # Initial conditions and parameter values
@@ -104,12 +105,15 @@ mean(recovery.rate)
 head(chain)
 tail(chain)
 
+end_time <- Sys.time()
+end_time - start_time
 
 
 #########################################################################################
 
-
 # Approximate Bayesian Computation Rejection Sampling for Discrete-time Stochastic SIR model
+
+start_time <- Sys.time()
 set.seed(8)
 
 # Initial conditions and parameter values
@@ -222,3 +226,6 @@ mean(recovery.rate)
 # Display the samples
 head(chain)
 tail(chain)
+
+end_time <- Sys.time()
+end_time - start_time

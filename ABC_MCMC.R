@@ -1,5 +1,6 @@
 # Approximate Bayesian Computation Markov chain Monte Carlo for Discrete-time Deterministic SIR model
 
+start_time <- Sys.time()
 set.seed(8)
 
 # Initial conditions and parameter values
@@ -77,32 +78,32 @@ for (i in 2:num_iterations) {
   # Calculate the distance metric between synthetic and observed data
   metric <- distance(synthetic_data, Observed_data)
   
-  # Compute based on the distance
+  # Evaluate distance metric
   if (!is.na(metric) && metric <= epsilon) {
-    likelihood <- 1
+    
+    # M-H probability
+    proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
+    proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
+    
+    prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
+      dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
+    
+    prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
+      dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
+    
+    mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
+    
+    # Accept or reject the proposals
+    if (!is.na(mh.prob) && runif(1) < mh.prob) {
+      chain[i, ] <- proposed_params
+    } else {
+      chain[i, ] <- chain[i - 1, ]
+    }
   } else {
-    likelihood <- 0
-  }
-  
-  # M-H probability
-  proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
-  proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
-  
-  prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
-    dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
-  
-  prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
-    dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
-  
-  mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current) * likelihood
-  
-  # Accept or reject the proposals
-  if (!is.na(mh.prob) && runif(1) < mh.prob) {
-    chain[i, ] <- proposed_params
-  } else {
-    chain[i, ] <- chain[i - 1, ]
+    chain[i, ] <- chain[i - 1, ]  # Keep the current parameter values in the chain
   }
 }
+
 
 # Plot the ABC-MCMC chain
 plot(chain[, 1], type = "l", main = "Chain of Parameter 1")
@@ -118,12 +119,15 @@ recovery.rate<- chain[,2]
 mean(infection.rate)
 mean(recovery.rate)
 
+end_time <- Sys.time()
+end_time - start_time
 
 
 ###########################################################################################################
 
 # Approximate Bayesian Computation Markov chain Monte Carlo for Discrete-time Stochastic SIR model
 
+start_time <- Sys.time()
 set.seed(8)
 
 # Initial conditions and parameter values
@@ -208,30 +212,29 @@ for (i in 2:num_iterations) {
   # Calculate the distance metric between synthetic and observed data
   metric <- distance(synthetic_data, Observed_data)
   
-  # Compute likelihood value based on the distance
+  # Evaluate distance metric
   if (!is.na(metric) && metric <= epsilon) {
-    likelihood <- 1
+    
+    # M-H probability
+    proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
+    proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
+    
+    prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
+      dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
+    
+    prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
+      dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
+    
+    mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
+    
+    # Accept or reject the proposals
+    if (!is.na(mh.prob) && runif(1) < mh.prob) {
+      chain[i, ] <- proposed_params
+    } else {
+      chain[i, ] <- chain[i - 1, ]
+    }
   } else {
-    likelihood <- 0
-  }
-  
-  # M-H probability
-  proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
-  proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
-  
-  prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
-    dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
-  
-  prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
-    dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
-  
-  mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current) * likelihood
-  
-  # Accept or reject the proposals
-  if (!is.na(mh.prob) && runif(1) < mh.prob) {
-    chain[i, ] <- proposed_params
-  } else {
-    chain[i, ] <- chain[i - 1, ]
+    chain[i, ] <- chain[i - 1, ]  # Keep the current parameter values in the chain
   }
 }
 
@@ -248,3 +251,6 @@ recovery.rate<- chain[,2]
 #Posterior means
 mean(infection.rate)
 mean(recovery.rate)
+
+end_time <- Sys.time()
+end_time - start_time
