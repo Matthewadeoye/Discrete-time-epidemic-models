@@ -54,7 +54,7 @@ epsilon <- 20
 num_iterations <- 200000
 
 # Saving parameter samples
-chain <- matrix(0, nrow = num_iterations, ncol = 2)
+posterior.samples <- matrix(0, nrow = num_iterations, ncol = 2)
 
 # Define a function to calculate the distance metric
 distance <- function(x, y) {
@@ -68,6 +68,7 @@ prior_dist <- function(n) {
   return(cbind(beta_samples, gamma_samples))
 }
 
+grid<- matrix(0, nrow = num_iterations, ncol = 3)
 
 # ABC-rejection algorithm
 for (i in 1:num_iterations) {
@@ -82,31 +83,53 @@ for (i in 1:num_iterations) {
   
   # Accept or reject the proposed parameters based on the distance
   if (!is.na(metric) && metric <= epsilon) {
-    chain[i, ] <- proposed_params
+    posterior.samples[i, ] <- proposed_params
+    grid[i,]<- c(posterior.samples[i,1], posterior.samples[i,2], metric)
   }
 }
 
 # Remove rows with all zeros and NA values from the parameter samples
-chain <- chain[apply(chain, 1, function(row) !all(row == 0)), ]
-chain <- chain[complete.cases(chain), ]
+posterior.samples <- posterior.samples[apply(posterior.samples, 1, function(row) !all(row == 0)), ]
+posterior.samples <- posterior.samples[complete.cases(posterior.samples), ]
+
+# Remove rows with all zeros and NA values from grid
+grid <- grid[apply(grid, 1, function(row) !all(row == 0)), ]
+grid <- grid[complete.cases(grid), ]
+colnames(grid) <- c("Beta","Gamma", "Distance metric")
+
+
+infection.rate <- posterior.samples[, 1]
+recovery.rate <- posterior.samples[, 2]
 
 # Plot the approximate posterior samples
-plot(chain[, 1], type = "l", main = "Chain of Parameter 1")
-plot(chain[, 2], type = "l", main = "Chain of Parameter 2")
+hist(infection.rate, xlab= "Infection rate", main = "Posterior samples of Beta from deterministic model")
+hist(recovery.rate, xlab= "Recovery rate", main = "Posterior samples of Gamma from deterministic model")
 
-infection.rate <- chain[, 1]
-recovery.rate <- chain[, 2]
+# Plot the approximate posterior samples
+#plot(posterior.samples[, 1], type = "l", main = "posterior samples of Beta")
+#plot(posterior.samples[, 2], type = "l", main = "posterior samples of Gamma")
 
 #Posterior means
 mean(infection.rate)
 mean(recovery.rate)
 
 # Display the samples
-head(chain)
-tail(chain)
+head(posterior.samples)
+tail(posterior.samples)
 
 end_time <- Sys.time()
 end_time - start_time
+
+# Find the parameters with minimum distance metric
+column_index<- 3
+smallest.distance <- min(grid[,column_index])
+row.number <- which(grid[, column_index] == smallest.distance, arr.ind = TRUE)[1]
+# Print the row index
+print(smallest.distance)
+print(row.number)
+grid[row.number, 1]
+grid[row.number, 2]
+grid[row.number, 3]
 
 
 #########################################################################################
@@ -176,7 +199,7 @@ epsilon <- 20
 num_iterations <- 200000
 
 # Saving parameter samples
-chain <- matrix(0, nrow = num_iterations, ncol = 2)
+posterior.samples <- matrix(0, nrow = num_iterations, ncol = 2)
 
 # Define a function to calculate the distance metric
 distance <- function(x, y) {
@@ -190,6 +213,7 @@ prior_dist <- function(n) {
   return(cbind(beta_samples, gamma_samples))
 }
 
+grid<- matrix(0, nrow = num_iterations, ncol = 3)
 
 # ABC-rejection algorithm
 for (i in 1:num_iterations) {
@@ -204,28 +228,51 @@ for (i in 1:num_iterations) {
   
   # Accept or reject the proposed parameters based on the distance
   if (!is.na(metric) && metric <= epsilon) {
-    chain[i, ] <- proposed_params
+    posterior.samples[i, ] <- proposed_params
+    grid[i,]<- c(posterior.samples[i,1], posterior.samples[i,2], metric)
   }
 }
 
-# Remove rows with zeros and NA values
-chain <- chain[apply(chain, 1, function(row) !all(row == 0)), ]
-chain <- chain[complete.cases(chain), ]
+# Remove rows with all zeros and NA values from the parameter samples
+posterior.samples <- posterior.samples[apply(posterior.samples, 1, function(row) !all(row == 0)), ]
+posterior.samples <- posterior.samples[complete.cases(posterior.samples), ]
 
-# Plot the chains
-plot(chain[, 1], type = "l", main = "Chain of Parameter 1")
-plot(chain[, 2], type = "l", main = "Chain of Parameter 2")
+# Remove rows with all zeros and NA values from grid
+grid <- grid[apply(grid, 1, function(row) !all(row == 0)), ]
+grid <- grid[complete.cases(grid), ]
+colnames(grid) <- c("Beta","Gamma", "Distance metric")
 
-infection.rate <- chain[, 1]
-recovery.rate <- chain[, 2]
+
+infection.rate <- posterior.samples[, 1]
+recovery.rate <- posterior.samples[, 2]
+
+# Plot the approximate posterior samples
+hist(infection.rate, xlab= "Infection rate", main = "Posterior samples of Beta from stochastic model")
+hist(recovery.rate, xlab= "Recovery rate", main = "Posterior samples of Gamma from stochastic model")
+
+# Plot the approximate posterior samples
+#plot(posterior.samples[, 1], type = "l", main = "posterior samples of Beta")
+#plot(posterior.samples[, 2], type = "l", main = "posterior samples of Gamma")
+
 
 #Posterior means
 mean(infection.rate)
 mean(recovery.rate)
 
 # Display the samples
-head(chain)
-tail(chain)
+head(posterior.samples)
+tail(posterior.samples)
 
 end_time <- Sys.time()
 end_time - start_time
+
+# Find the parameters with minimum distance metric
+column_index<- 3
+smallest.distance <- min(grid[,column_index])
+row.number <- which(grid[, column_index] == smallest.distance, arr.ind = TRUE)[1]
+# Print the row index
+print(smallest.distance)
+print(row.number)
+grid[row.number, 1]
+grid[row.number, 2]
+grid[row.number, 3]

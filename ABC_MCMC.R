@@ -37,9 +37,8 @@ DT_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
   return(data$Removals)
 }
 
-# Compute observed data (O_t)
+# Define the observed data (O_t)
 Observed_data <- DT_model(N, S0, I0, minTime, maxTime, beta, gamma, step_size)
-
 
 # Define model
 model <- function(params) {
@@ -48,12 +47,11 @@ model <- function(params) {
   return(Simulated_data)
 }
 
-
 # Define acceptance threshold
 epsilon <- 20
 
 # Define number of iterations
-num_iterations <- 150000
+num_iterations <- 200000
 
 # Initialize the MCMC chain
 chain <- matrix(0, nrow = num_iterations, ncol = 2)
@@ -64,38 +62,50 @@ distance <- function(x, y) {
 }
 
 # Initialize parameter values
-chain[1,]<- c(beta,gamma)
+chain[1,]<- c(runif(1, 0, 0.001), runif(1, 0, 0.1))
+
 
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
-  # Generate parameter proposals from the prior distributions
+  # Generate parameter proposals from the proposal kernels
   proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
   
+  # M-H probability
+  #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
+  #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
   
-  # Generate synthetic data based on the proposed parameters
-  synthetic_data <- model(proposed_params)
   
-  # Calculate the distance metric between synthetic and observed data
-  metric <- distance(synthetic_data, Observed_data)
   
-  # Evaluate distance metric
-  if (!is.na(metric) && metric <= epsilon) {
+  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
+    dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
+  
+  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
+    dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
+  
+  #If using the alternative prior distributions
+  #prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.03, log = TRUE) +
+  # dnorm(proposed_params[2], mean = 0.04, sd = 0.03, log = TRUE)
+  # prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.03, log = TRUE) +
+  #  dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.03, log = TRUE)
+  
+  
+  
+  #mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
+  
+   mh.prob <- exp(prior_proposed - prior_current)
+  
+  # Accept (and simulate) or reject the proposals
+  if (!is.na(mh.prob) && runif(1) < mh.prob) {
     
-    # M-H probability
-    proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
-    proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
+    # Generate synthetic data based on the proposed parameters
+    synthetic_data <- model(proposed_params)
     
-    prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
-      dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
+    # Calculate the distance metric between synthetic and observed data
+    metric <- distance(synthetic_data, Observed_data)
     
-    prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
-      dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
-    
-    mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
-    
-    # Accept or reject the proposals
-    if (!is.na(mh.prob) && runif(1) < mh.prob) {
-      chain[i, ] <- proposed_params
+    # Evaluate distance metric
+    if (!is.na(metric) && metric <= epsilon) {
+      chain[i, ] <- proposed_params 
     } else {
       chain[i, ] <- chain[i - 1, ]
     }
@@ -106,8 +116,8 @@ for (i in 2:num_iterations) {
 
 
 # Plot the ABC-MCMC chain
-plot(chain[, 1], type = "l", main = "Chain of Parameter 1")
-plot(chain[, 2], type = "l", main = "Chain of Parameter 2")
+plot(chain[, 1], type = "l", ylab="Beta", main = "Chain of Beta for Deterministic SIR model")
+plot(chain[, 2], type = "l", ylab="Gamma", main = "Chain of Gamma for Deterministic SIR model")
 
 head(chain)
 tail(chain)
@@ -123,7 +133,20 @@ end_time <- Sys.time()
 end_time - start_time
 
 
+# Plot prior and posterior distributions
+#prior_samples <- prior_dist(num_iterations)
+
+#par(mfrow = c(1, 2)) 
+#hist(prior_samples[, 1], xlab = "Infection rate", main = "Prior distribution of Beta", col = "lightblue")
+hist(infection.rate, xlab = "Infection rate", main = "Posterior distribution of Beta", col = "lightgreen")
+
+#par(mfrow = c(1, 2))
+#hist(prior_samples[, 2], xlab = "Recovery rate", main = "Prior distribution of Gamma", col = "lightblue")
+hist(recovery.rate, xlab = "Recovery rate", main = "Posterior distribution of Gamma", col = "lightgreen")
+
+
 ###########################################################################################################
+
 
 # Approximate Bayesian Computation Markov chain Monte Carlo for Discrete-time Stochastic SIR model
 
@@ -187,7 +210,7 @@ model <- function(params) {
 epsilon <- 20
 
 # Define number of iterations
-num_iterations <- 150000
+num_iterations <- 200000
 
 # Initialize the MCMC chain
 chain <- matrix(0, nrow = num_iterations, ncol = 2)
@@ -198,38 +221,50 @@ distance <- function(x, y) {
 }
 
 # Initialize parameter values
-chain[1,]<-c(beta,gamma)
+chain[1,]<- c(runif(1, 0, 0.001), runif(1, 0, 0.1))
+
 
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
   proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
   
+  # M-H probability
+  #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
+  #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
   
-  # Generate synthetic data based on the proposed parameters
-  synthetic_data <- model(proposed_params)
   
-  # Calculate the distance metric between synthetic and observed data
-  metric <- distance(synthetic_data, Observed_data)
+  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
+    dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
   
-  # Evaluate distance metric
-  if (!is.na(metric) && metric <= epsilon) {
+  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
+    dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
+  
+  
+  #If using the alternative prior distributions
+  #prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.03, log = TRUE) +
+  # dnorm(proposed_params[2], mean = 0.04, sd = 0.03, log = TRUE)
+  # prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.03, log = TRUE) +
+  #  dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.03, log = TRUE)
+  
+  
+  
+  #mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
+  
+   mh.prob <- exp(prior_proposed - prior_current)
+  
+  # Accept (and simulate) or reject the proposals
+  if (!is.na(mh.prob) && runif(1) < mh.prob) {
     
-    # M-H probability
-    proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = c(0.6, 0.5), log = TRUE))
-    proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = c(0.6, 0.5), log = TRUE))
+    # Generate synthetic data based on the proposed parameters
+    synthetic_data <- model(proposed_params)
     
-    prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.3, log = TRUE) +
-      dnorm(proposed_params[2], mean = 0.04, sd = 0.3, log = TRUE)
+    # Calculate the distance metric between synthetic and observed data
+    metric <- distance(synthetic_data, Observed_data)
     
-    prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.3, log = TRUE) +
-      dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.3, log = TRUE)
-    
-    mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
-    
-    # Accept or reject the proposals
-    if (!is.na(mh.prob) && runif(1) < mh.prob) {
-      chain[i, ] <- proposed_params
+    # Evaluate distance metric
+    if (!is.na(metric) && metric <= epsilon) {
+      chain[i, ] <- proposed_params 
     } else {
       chain[i, ] <- chain[i - 1, ]
     }
@@ -238,9 +273,10 @@ for (i in 2:num_iterations) {
   }
 }
 
-# Plot chain
-plot(chain[, 1], type = "l", main = "Chain of Parameter 1")
-plot(chain[, 2], type = "l", main = "Chain of Parameter 2")
+
+# Plot the ABC-MCMC chain
+plot(chain[, 1], type = "l", ylab="Beta", main = "Chain of Beta for Stochastic SIR model")
+plot(chain[, 2], type = "l", ylab="Gamma", main = "Chain of Gamma for Stochastic SIR model")
 
 head(chain)
 tail(chain)
@@ -254,3 +290,16 @@ mean(recovery.rate)
 
 end_time <- Sys.time()
 end_time - start_time
+
+
+# Plot prior and posterior distributions
+#prior_samples <- prior_dist(num_iterations)
+
+#par(mfrow = c(1, 2)) 
+#hist(prior_samples[, 1], xlab = "Infection rate", main = "Prior distribution of Beta", col = "lightblue")
+hist(infection.rate, xlab = "Infection rate", main = "Posterior distribution of Beta", col = "lightgreen")
+
+#par(mfrow = c(1, 2))
+#hist(prior_samples[, 2], xlab = "Recovery rate", main = "Prior distribution of Gamma", col = "lightblue")
+hist(recovery.rate, xlab = "Recovery rate", main = "Posterior distribution of Gamma", col = "lightgreen")
+
