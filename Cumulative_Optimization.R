@@ -85,16 +85,16 @@ Initpredicted_data<- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, exp
 library(ggplot2)
 ggplot() +
   geom_point(data = observed_data, aes(x = Steps, y = Removals, color = "Observed"), size = 1) +
-  geom_line(data = predicted_data, aes(x = Steps, y = R, color = "Predicted at optimized values"), size = 1) +
-  geom_line(data = Initpredicted_data, aes(x = Steps, y =R, color = "Predicted at initial values"), size = 1) +
-  labs(x = "Time", y = "Cumulative removals", title = "Observed vs predicted cumulative removals") +
-  scale_color_manual(values = c("Observed" = "blue", "Predicted at optimized values" = "red", "Predicted at initial values" = "black")) +
+  geom_line(data = predicted_data, aes(x = Steps, y = R, color = "Predicted using optimized values"), size = 1) +
+  geom_line(data = Initpredicted_data, aes(x = Steps, y =R, color = "Predicted using initial values"), size = 1) +
+  labs(x = "Day", y = "Cumulative removals", title = "Observed vs predicted cumulative removals") +
+  scale_color_manual(values = c("Observed" = "blue", "Predicted using optimized values" = "red", "Predicted using initial values" = "black")) +
   theme_minimal()
 
 
 estimated_params
 
-data.frame(observed_data,predicted_data$R, Initpredicted_data$R)
+#data.frame(observed_data,predicted_data$R, Initpredicted_data$R)
 
 
 

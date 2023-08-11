@@ -35,7 +35,7 @@ step_size <- 1   # Step size for time discretization
 
 simulated_data <- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, beta, gamma, step_size)
 
-# Observed data on removals (cumulative with Binomial or Poisson noise)
+# Observed data on removals (cumulative with Poisson noise)
 observed_data <- data.frame(
   Steps = simulated_data$Steps,
   Removals= c(0, rpois(length(simulated_data$Steps)-1, diff(simulated_data$R))))
@@ -49,6 +49,7 @@ objective_function <- function(params) {
   
   beta<- exp(beta)
   gamma<- exp(gamma)
+  
   # Simulate SIR model using current parameter values
   model_data <- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, beta, gamma, step_size)
   
@@ -87,14 +88,15 @@ Initpredicted_data$ActualRemovals<- c(0,diff(Initpredicted_data$R))
 # Plot observed and simulated removals  
 library(ggplot2)
 ggplot() +
-  geom_point(data = observed_data, aes(x = Steps, y = Removals, color = "Observed"), size = 1) +
-  geom_line(data = predicted_data, aes(x = Steps, y = ActualRemovals, color = "Predicted at optimized values"), size = 1) +
-  geom_line(data = Initpredicted_data, aes(x = Steps, y = ActualRemovals, color = "Predicted at initial values"), size = 1) +
-  ylim(0, 100) +
-  labs(x = "Time", y = "Actual removals", title = "Observed vs predicted actual removals") +
-  scale_color_manual(values = c("Observed" = "blue", "Predicted at optimized values" = "red", "Predicted at initial values" = "black")) +
+  geom_point(data = observed_data, aes(x = Steps, y = Removals, color = "Observed removals"), size = 1) +
+  geom_line(data = predicted_data, aes(x = Steps, y = ActualRemovals, color = "Predicted using optimized values"), linewidth = 1) +
+  geom_line(data = Initpredicted_data, aes(x = Steps, y = ActualRemovals, color = "Predicted using initial values"), linewidth = 1) +
+  ylim(0, 50) +
+  labs(x = "Day", y = "Removals", title = "") +
+  scale_color_manual(values = c("Observed removals" = "blue", "Predicted using optimized values" = "red", "Predicted using initial values" = "black")) +
   theme_minimal()
 
-estimated_params
+estimated_params  #[1] \beta=9.975941e-05  \gamma=4.881066e-02
 
-data.frame(observed_data$Removals, predicted_data$ActualRemovals, Initpredicted_data$ActualRemovals)
+
+#data.frame(observed_data$Removals, predicted_data$ActualRemovals, Initpredicted_data$ActualRemovals)

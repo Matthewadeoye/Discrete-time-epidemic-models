@@ -1,9 +1,6 @@
-# INCORPORATING ABC-REJECTION INTO ABC-MCMC TO GUESS INITIAL PARAMETER VALUES AND TOLERANCE
+#ABC-MCMC using Summary Statistics constructed from linear regression 
 
-#Deterministic SIR
-
-start_time <- Sys.time()
-set.seed(1)
+#Bayesian Inference for Deterministic SIR
 
 # Initial conditions and parameter values
 N <- 1000    # Total population size
@@ -53,7 +50,7 @@ model <- function(params) {
 epsilon <- 20
 
 # Define the number of iterations
-num_iterations <- 200000
+num_iterations <- 50000
 
 # Saving parameter samples
 posterior.samples <- matrix(0, nrow = num_iterations, ncol = 2)
@@ -70,13 +67,6 @@ prior_dist <- function(n) {
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
   return(cbind(beta_samples, gamma_samples))
 }
-
-# Alternative prior distributions
-#prior_dist <- function(n, params) {
-#  beta_samples <- abs(rnorm(n, mean = 0.0003, sd = 0.03))  # Gaussian prior for beta
-#  gamma_samples <- abs(rnorm(n, mean = 0.04, sd = 0.03))   # Gaussian prior for gamma
-#  return(cbind(beta_samples, gamma_samples))
-#}
 
 
 grid<- matrix(0, nrow = num_iterations, ncol = 3)
@@ -109,17 +99,6 @@ grid <- grid[complete.cases(grid), ]
 colnames(grid) <- c("Beta","Gamma", "Distance metric")
 
 
-infection.rate <- posterior.samples[, 1]
-recovery.rate <- posterior.samples[, 2]
-
-
-#Posterior means
-mean(infection.rate)
-mean(recovery.rate)
-
-end_time <- Sys.time()
-end_time - start_time
-
 # Find the parameters with minimum distance metric
 column_index<- 3
 smallest.distance <- min(grid[,column_index])
@@ -132,44 +111,70 @@ grid[row.number, 2]
 grid[row.number, 3]
 
 
-##ABC MCMC begins here
+#Constructing summary statistics with linear regression
 
-#epsilon <- smallest.distance
-epsilon <- 17
+N<- 10000
+bdata<- numeric(N)
+gdata<- numeric(N)
+designMatrix<- matrix(0, nrow=N, ncol=365)
+colnames(designMatrix) <- paste(rep("X=", 365),seq(1,365), sep="")
 
-# Define number of iterations
-num_iterations <- 150000
+for(i in 1:N){
+  params<- prior_dist(1)
+  bdata[i]<- params[1]
+  gdata[i]<- params[2]
+  
+  designMatrix[i,]<- model(params)
+}
 
-# Initialize the MCMC chain
-chain <- matrix(0, nrow = num_iterations, ncol = 2)
+designMatrix<- as.data.frame(designMatrix)
+Observed_data<- as.data.frame(t(Observed_data))
+colnames(Observed_data) <- paste(rep("X=", 365),seq(1,365), sep="")
 
-# Initialize parameter values 
-chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
+#Summary statistic for Beta
+data1<- cbind(bdata,designMatrix)
+regression1<- lm(bdata~ ., data=data1)
+Observed_statisticBeta <- predict(regression1, newdata = Observed_data)
+
+
+#Summary statistic for Gamma
+data2<- cbind(gdata,designMatrix)
+regression2<- lm(gdata~ ., data=data2)
+Observed_statisticGamma <- predict(regression2, newdata = Observed_data)
+
+Observed_statisticBeta
+Observed_statisticGamma
+
+
+# Define a function to calculate the distance metric (L2 norm)
+distance <- function(x1, x2, y1, y2) {
+  e<- sqrt(((x1 - y1)^2) + ((x2 - y2)^2))
+  return(e)
+}
+
 
 # ABC-MCMC algorithm
+
+epsilon <- 0.0007
+
+# Define number of iterations
+num_iterations <- 10000
+
+chain <- matrix(0, nrow = num_iterations, ncol = 2)
+
+
+# Initialize parameter values
+chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
+
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, c(chain[i - 1, 1],0.05), c(chain[1,1],0.01)))
-  
-  # M-H probability
-  #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
-  #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = chain[1,], log = TRUE))
-  
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
   
   prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
     dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
   prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
     dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
   
-  
-  #If using the alternative prior distributions
-  # prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.03, log = TRUE) +
-  #  dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.03, log = TRUE)
-  #prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.03, log = TRUE) +
-  # dnorm(proposed_params[2], mean = 0.04, sd = 0.03, log = TRUE)
-  
-  
-  #mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
   
   mh.prob <- exp(prior_proposed - prior_current)
   
@@ -179,8 +184,16 @@ for (i in 2:num_iterations) {
     # Generate synthetic data based on the proposed parameters
     synthetic_data <- model(proposed_params)
     
-    # Calculate the distance metric between synthetic and observed data
-    metric <- distance(synthetic_data, Observed_data)
+    synthetic_data<- as.data.frame(t(synthetic_data))
+    colnames(synthetic_data) <- paste(rep("X=", 365),seq(1,365), sep="")
+    
+    synthetic_statisticBeta<- predict(regression1, newdata = synthetic_data)
+    synthetic_statisticGamma<- predict(regression2, newdata = synthetic_data)
+    
+    
+    # Calculate the distance metric between synthetic and observed summary statistics
+    metric<- distance(Observed_statisticBeta, Observed_statisticGamma, synthetic_statisticBeta, synthetic_statisticGamma)
+    
     
     # Evaluate distance metric
     if (!is.na(metric) && metric <= epsilon) {
@@ -196,50 +209,25 @@ for (i in 2:num_iterations) {
 
 infection.rate<- chain[,1]
 recovery.rate<- chain[,2]
-
 #Posterior means
 mean(infection.rate)
 mean(recovery.rate)
 
-end_time <- Sys.time()
-end_time - start_time
-
-#Obtaining range of posterior samples
-min(infection.rate)   
-max(infection.rate)   
-min(recovery.rate)    
-max(recovery.rate)  
-
-#create the contour plot
-x<- seq(0.00003,0.0003, 0.00005)
-
-y<- seq(0.02, 0.1, 0.005)
-
-u <- as.matrix(expand.grid(x, y))
-
-z<- matrix(apply(u, 1, function(v) distance(model(c(v[1], v[2])),Observed_data)),
-           nrow = length(x)) 
-
-filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
-               xlab="Infection rate (Beta)",
-               ylab="Recovery rate (Gamma)",
-               main="Distance metric between observed and simulated data")
-
 #Plots
 par(mfrow=c(2,3)) # Create a 2x3 plotting area
 #par(mar=c(4,2,2,2))
-hist(infection.rate, freq=F, xlab = expression(beta), breaks=25, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
+hist(infection.rate, freq=F, xlab = expression(beta), main = "", col = "white", ylab="Density")
 abline(v=0.0001, col="red", lwd=2,lty=1)
-abline(h=1000, col="blue", lwd=2,lty=1)
-plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0,0.00035))
-#mtext("(a)", side = 3, line = -26, outer = TRUE)
-plot(infection.rate,recovery.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(beta),ylab=expression(gamma))
-hist(recovery.rate, freq=F, xlab = expression(gamma), breaks=25, main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
+abline(h=1, col="blue", lwd=2,lty=1)
+plot(chain[, 1], type = "l", ylab=expression(beta), main = "", xlab="Index", ylim=c(0,0.00035))
+mtext("(a)", side = 3, line = -26, outer = TRUE)
+plot(infection.rate,recovery.rate, xlab=expression(beta),ylab=expression(gamma))
+hist(recovery.rate, freq=F, xlab = expression(gamma), main = "", col = "white",ylab="Density")
 abline(v=0.05, col="red", lwd=2,lty=1)
-abline(h=10, col="blue", lwd=2,lty=1)
-plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.02,0.15))
-#mtext("(b)", side = 1, line = -1, outer = TRUE)
-plot(recovery.rate,infection.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(gamma),ylab=expression(beta))
+abline(h=1, col="blue", lwd=2,lty=1)
+plot(chain[, 2], type = "l", ylab=expression(gamma), main = "", xlab="Index",ylim=c(0.02,0.15))
+mtext("(b)", side = 1, line = -1, outer = TRUE)
+plot(recovery.rate,infection.rate, xlab=expression(gamma),ylab=expression(beta))
 add_legend <- function(...) {
   opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
               mar=c(0, 0, 0, 0), new=TRUE)
@@ -252,17 +240,36 @@ add_legend("topright", legend=c("True value", "Prior density"), lty=1,
            col=c("red", "blue"),
            horiz=TRUE, bty='n', cex=1.1)
 
-#df<- data.frame(Beta=infection.rate,Gamma=recovery.rate)
-#ggplot(df, aes(Beta, Gamma)) + stat_density_2d(aes(fill = stat(level)), geom = 'polygon') + scale_fill_viridis_c(name = "density") + geom_point(shape = '.') + guides(fill = FALSE)  # This line removes the fill legend
+
+# Create the contour plot
+x <- seq(0.00003, 0.0003, 0.00005)
+y <- seq(0.02, 0.1, 0.005)
+u <- as.matrix(expand.grid(x, y))
+
+summary <- function(x, y) {
+  synthetic_data <- model(c(x, y))
+  synthetic_data <- as.data.frame(t(synthetic_data))
+  colnames(synthetic_data) <- paste(rep("X=", 365), seq(1, 365), sep = "")
+  
+  synthetic_statisticBeta <- predict(regression1, newdata = synthetic_data)
+  synthetic_statisticGamma <- predict(regression2, newdata = synthetic_data)
+  
+  return(list(synthetic_statisticBeta, synthetic_statisticGamma)) # Return the results as a list
+}
+
+z <- matrix(apply(u, 1, function(v) distance(summary(v[1], v[2])[[1]], Observed_statisticBeta, summary(v[1], v[2])[[2]], Observed_statisticGamma)), 
+            nrow = length(x))
+
+filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
+               xlab="Infection rate (Beta)",
+               ylab="Recovery rate (Gamma)",
+               main="Distance metric between observed and simulated data")
 
 
 
-##############################################################################################################
+##################################################################################################################
 
-#Stochastic SIR
-
-start_time <- Sys.time()
-set.seed(8)
+#Bayesian Inference for Stochastic SIR
 
 # Initial conditions and parameter values
 N <- 1000    # Total population size
@@ -322,7 +329,7 @@ model <- function(params) {
 epsilon <- 20
 
 # Define the number of iterations
-num_iterations <- 200000
+num_iterations <- 50000
 
 # Saving parameter samples
 posterior.samples <- matrix(0, nrow = num_iterations, ncol = 2)
@@ -339,13 +346,6 @@ prior_dist <- function(n) {
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
   return(cbind(beta_samples, gamma_samples))
 }
-
-# Alternative prior distributions
-#prior_dist <- function(n, params) {
-#  beta_samples <- abs(rnorm(n, mean = 0.0003, sd = 0.03))  # Gaussian prior for beta
-#  gamma_samples <- abs(rnorm(n, mean = 0.04, sd = 0.03))   # Gaussian prior for gamma
-#  return(cbind(beta_samples, gamma_samples))
-#}
 
 
 grid<- matrix(0, nrow = num_iterations, ncol = 3)
@@ -378,16 +378,6 @@ grid <- grid[complete.cases(grid), ]
 colnames(grid) <- c("Beta","Gamma", "Distance metric")
 
 
-infection.rate <- posterior.samples[, 1]
-recovery.rate <- posterior.samples[, 2]
-
-#Posterior means
-mean(infection.rate)
-mean(recovery.rate)
-
-end_time <- Sys.time()
-end_time - start_time
-
 # Find the parameters with minimum distance metric
 column_index<- 3
 smallest.distance <- min(grid[,column_index])
@@ -400,45 +390,70 @@ grid[row.number, 2]
 grid[row.number, 3]
 
 
-##ABC-MCMC begins here
+#Constructing summary statistics with linear regression
 
-#epsilon <- smallest.distance
-epsilon <- 21
+N<- 10000
+bdata<- numeric(N)
+gdata<- numeric(N)
+designMatrix<- matrix(0, nrow=N, ncol=365)
+colnames(designMatrix) <- paste(rep("X=", 365),seq(1,365), sep="")
+
+for(i in 1:N){
+  params<- prior_dist(1)
+  bdata[i]<- params[1]
+  gdata[i]<- params[2]
+  
+  designMatrix[i,]<- model(params)
+}
+
+designMatrix<- as.data.frame(designMatrix)
+Observed_data<- as.data.frame(t(Observed_data))
+colnames(Observed_data) <- paste(rep("X=", 365),seq(1,365), sep="")
+
+#Summary statistic for Beta
+data1<- cbind(bdata,designMatrix)
+regression1<- lm(bdata~ ., data=data1)
+Observed_statisticBeta <- predict(regression1, newdata = Observed_data)
+
+
+#Summary statistic for Gamma
+data2<- cbind(gdata,designMatrix)
+regression2<- lm(gdata~ ., data=data2)
+Observed_statisticGamma <- predict(regression2, newdata = Observed_data)
+
+Observed_statisticBeta
+Observed_statisticGamma
+
+
+# Define a function to calculate the distance metric (L2 norm)
+distance <- function(x1, x2, y1, y2) {
+  e<- sqrt(((x1 - y1)^2) + ((x2 - y2)^2))
+  return(e)
+}
+
+
+# ABC-MCMC algorithm
+
+epsilon <- 0.0007
 
 # Define number of iterations
-num_iterations <- 150000
+num_iterations <- 10000
 
-# Initialize the MCMC chain
 chain <- matrix(0, nrow = num_iterations, ncol = 2)
 
 
 # Initialize parameter values
 chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 
-# ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
   proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
-  
-  # M-H probability
-  #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
-  #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = chain[1,], log = TRUE))
-  
   
   prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
     dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
   prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
     dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
   
-  
-  #If using the alternative prior distributions
-  # prior_current <- dnorm(chain[i - 1, 1], mean = 0.0003, sd = 0.03, log = TRUE) +
-  #  dnorm(chain[i - 1, 2], mean = 0.04, sd = 0.03, log = TRUE)
-  #prior_proposed <- dnorm(proposed_params[1], mean = 0.0003, sd = 0.03, log = TRUE) +
-  # dnorm(proposed_params[2], mean = 0.04, sd = 0.03, log = TRUE)
-  
-  
-  #mh.prob <- exp(proposal_proposed - proposal_current + prior_proposed - prior_current)
   
   mh.prob <- exp(prior_proposed - prior_current)
   
@@ -448,8 +463,16 @@ for (i in 2:num_iterations) {
     # Generate synthetic data based on the proposed parameters
     synthetic_data <- model(proposed_params)
     
-    # Calculate the distance metric between synthetic and observed data
-    metric <- distance(synthetic_data, Observed_data)
+    synthetic_data<- as.data.frame(t(synthetic_data))
+    colnames(synthetic_data) <- paste(rep("X=", 365),seq(1,365), sep="")
+    
+    synthetic_statisticBeta<- predict(regression1, newdata = synthetic_data)
+    synthetic_statisticGamma<- predict(regression2, newdata = synthetic_data)
+    
+    
+    # Calculate the distance metric between synthetic and observed summary statistics
+    metric<- distance(Observed_statisticBeta, Observed_statisticGamma, synthetic_statisticBeta, synthetic_statisticGamma)
+    
     
     # Evaluate distance metric
     if (!is.na(metric) && metric <= epsilon) {
@@ -462,52 +485,28 @@ for (i in 2:num_iterations) {
   }
 }
 
+
 infection.rate<- chain[,1]
 recovery.rate<- chain[,2]
-
 #Posterior means
 mean(infection.rate)
 mean(recovery.rate)
 
-end_time <- Sys.time()
-end_time - start_time
-
-#Obtaining range of posterior samples
-min(infection.rate)   
-max(infection.rate)   
-min(recovery.rate)    
-max(recovery.rate)  
-
-#create the contour plot
-x<- seq(0.00003,0.0003, 0.00005)
-
-y<- seq(0.02, 0.1, 0.005)
-
-u <- as.matrix(expand.grid(x, y))
-
-z<- matrix(apply(u, 1, function(v) distance(model(c(v[1], v[2])),Observed_data)),
-           nrow = length(x)) 
-
-filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
-               xlab="Infection rate (Beta)",
-               ylab="Recovery rate (Gamma)",
-               main="Distance metric between observed and simulated data")
-
 #Plots
 par(mfrow=c(2,3)) # Create a 2x3 plotting area
 #par(mar=c(4,2,2,2))
-hist(infection.rate, freq=F, xlab = expression(beta), breaks=22, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
+hist(infection.rate, freq=F, xlab = expression(beta), main = "", col = "white", ylab="Density")
 abline(v=0.0001, col="red", lwd=2,lty=1)
-abline(h=1000, col="blue", lwd=2,lty=1)
-plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0,0.00035))
-#mtext("(a)", side = 3, line = -26, outer = TRUE)
-plot(infection.rate,recovery.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(beta),ylab=expression(gamma))
-hist(recovery.rate, freq=F, xlab = expression(gamma), breaks=22, main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
+abline(h=1, col="blue", lwd=2,lty=1)
+plot(chain[, 1], type = "l", ylab=expression(beta), main = "", xlab="Index", ylim=c(0,0.00035))
+mtext("(a)", side = 3, line = -26, outer = TRUE)
+plot(infection.rate,recovery.rate, xlab=expression(beta),ylab=expression(gamma))
+hist(recovery.rate, freq=F, xlab = expression(gamma), main = "", col = "white",ylab="Density")
 abline(v=0.05, col="red", lwd=2,lty=1)
-abline(h=10, col="blue", lwd=2,lty=1)
-plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.02,0.15))
-#mtext("(b)", side = 1, line = -1, outer = TRUE)
-plot(recovery.rate,infection.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(gamma),ylab=expression(beta))
+abline(h=1, col="blue", lwd=2,lty=1)
+plot(chain[, 2], type = "l", ylab=expression(gamma), main = "", xlab="Index",ylim=c(0.02,0.15))
+mtext("(b)", side = 1, line = -1, outer = TRUE)
+plot(recovery.rate,infection.rate, xlab=expression(gamma),ylab=expression(beta))
 add_legend <- function(...) {
   opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
               mar=c(0, 0, 0, 0), new=TRUE)
@@ -520,5 +519,28 @@ add_legend("topright", legend=c("True value", "Prior density"), lty=1,
            col=c("red", "blue"),
            horiz=TRUE, bty='n', cex=1.1)
 
-#df<- data.frame(Beta=infection.rate,Gamma=recovery.rate)
-#ggplot(df, aes(Beta, Gamma)) + stat_density_2d(aes(fill = stat(level)), geom = 'polygon') + scale_fill_viridis_c(name = "density") + geom_point(shape = '.') + guides(fill = FALSE)  # This line removes the fill legend
+
+
+# Create the contour plot
+x <- seq(0.00003, 0.0003, 0.00005)
+y <- seq(0.02, 0.1, 0.005)
+u <- as.matrix(expand.grid(x, y))
+
+summary <- function(x, y) {
+  synthetic_data <- model(c(x, y))
+  synthetic_data <- as.data.frame(t(synthetic_data))
+  colnames(synthetic_data) <- paste(rep("X=", 365), seq(1, 365), sep = "")
+  
+  synthetic_statisticBeta <- predict(regression1, newdata = synthetic_data)
+  synthetic_statisticGamma <- predict(regression2, newdata = synthetic_data)
+  
+  return(list(synthetic_statisticBeta, synthetic_statisticGamma)) # Return the results as a list
+}
+
+z <- matrix(apply(u, 1, function(v) distance(summary(v[1], v[2])[[1]], Observed_statisticBeta, summary(v[1], v[2])[[2]], Observed_statisticGamma)), 
+            nrow = length(x))
+
+filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
+               xlab="Infection rate (Beta)",
+               ylab="Recovery rate (Gamma)",
+               main="Distance metric between observed and simulated data")
