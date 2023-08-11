@@ -588,8 +588,9 @@ add_legend <- function(...) {
   plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
   legend(...)
 }
-add_legend("bottomright", legend=c("Susceptible", "Infected", "Recovered"), lty=1, 
+add_legend("topright", legend=c("Susceptible", "Infected", "Recovered"), lty=1, 
            col=c("blue", "red", "green"),
-           horiz=F, bty='n', cex=0.8)
+           horiz=T, bty='n', cex=1.0)
+
 
 

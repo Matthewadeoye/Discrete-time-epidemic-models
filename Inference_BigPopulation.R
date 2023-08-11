@@ -406,7 +406,7 @@ chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], c(0.02,0.01)))
   
   # M-H probability
   #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
@@ -460,12 +460,6 @@ mean(recovery.rate)
 end_time <- Sys.time()
 end_time - start_time
 
-#Obtaining range of posterior samples
-min(infection.rate)   
-max(infection.rate)   
-min(recovery.rate)    
-max(recovery.rate)  
-
 
 #Plots
 par(mfrow=c(2,3)) # Create a 2x3 plotting area
@@ -473,13 +467,13 @@ par(mfrow=c(2,3)) # Create a 2x3 plotting area
 hist(infection.rate, freq=F, xlab = expression(beta), main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
 abline(v=0.1, col="red", lwd=2,lty=1)
 abline(h=5, col="blue", lwd=2,lty=1)
-plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0.09,0.12))
+plot(infection.rate, type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0.09,0.12))
 #mtext("(a)", side = 3, line = -26, outer = TRUE)
 plot(infection.rate,recovery.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(beta),ylab=expression(gamma))
 hist(recovery.rate, freq=F, xlab = expression(gamma), main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
 abline(v=0.05, col="red", lwd=2,lty=1)
 abline(h=10, col="blue", lwd=2,lty=1)
-plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.04,0.06))
+plot(recovery.rate, type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.04,0.06))
 #mtext("(b)", side = 1, line = -1, outer = TRUE)
 plot(recovery.rate,infection.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(gamma),ylab=expression(beta))
 add_legend <- function(...) {
