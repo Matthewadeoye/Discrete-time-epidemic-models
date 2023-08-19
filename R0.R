@@ -149,7 +149,7 @@ chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, c(chain[i - 1, 1],0.05), c(chain[1,1],0.01)))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], c(chain[1,1],0.01)))
   
   # M-H probability
   #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
@@ -205,7 +205,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- (infection.rate/recovery.rate)*1000
-hist(R0, freq=F, xlab = "R0", main = "(a)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(a)", breaks=10, xlim=c(0.3,3.3), col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 
@@ -370,7 +370,7 @@ chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, c(chain[i - 1, 1],0.05), c(chain[1,1],0.01)))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], c(chain[1,1],0.01)))
   
   # M-H probability
   #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
@@ -425,7 +425,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- (infection.rate/recovery.rate)*1000
-hist(R0, freq=F, xlab = "R0", main = "(b)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(b)", xlim=c(0.3,3.3), breaks=10, col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 ##################################################################################
@@ -579,7 +579,7 @@ chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, c(chain[i - 1, 1],0.05), c(chain[1,1],0.01)))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], c(chain[1,1],0.01)))
   
   # M-H probability
   #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
@@ -634,7 +634,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- (infection.rate/recovery.rate)*1000
-hist(R0, freq=F, xlab = "R0", main = "(c)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(c)", xlim=c(0.3,3.3), breaks=10, col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 
@@ -845,7 +845,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- infection.rate/recovery.rate
-hist(R0, freq=F, xlab = "R0", main = "(d)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(d)", xlim=c(0.3,3.3), breaks=6, col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 ##################################################################################
@@ -1066,7 +1066,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- infection.rate/recovery.rate
-hist(R0, freq=F, xlab = "R0", main = "(e)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(e)", xlim=c(0.3,3.3), breaks=6, col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 ##################################################################################
@@ -1272,7 +1272,7 @@ end_time <- Sys.time()
 end_time - start_time
 
 R0<- infection.rate/recovery.rate
-hist(R0, freq=F, xlab = "R0", main = "(f)", col = "white",ylab="Density")
+hist(R0, freq=F, xlab =expression("R"[0]), main = "(f)", xlim=c(0.3,3.3), breaks=6, col = "white",ylab="Density")
 abline(v=2, col="red", lwd=2,lty=1)
 
 ###########################################################################

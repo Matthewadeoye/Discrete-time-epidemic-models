@@ -1,9 +1,7 @@
-# INCORPORATING ABC-REJECTION INTO ABC-MCMC TO GUESS INITIAL PARAMETER VALUES AND TOLERANCE
-
 #Deterministic SIR
 
 start_time <- Sys.time()
-set.seed(1)
+set.seed(419)
 
 # Initial conditions and parameter values
 N <- 1000    # Total population size
@@ -11,7 +9,7 @@ S0 <- 900    # Initial number of susceptibles
 I0 <- 100    # Initial number of infectives
 minTime <- 1
 maxTime <- 365
-beta <- 0.0001    # Infection rate
+beta <- 0.1    # Infection rate
 gamma <- 0.05     # Recovery rate
 step_size <- 1    # Step size for time discretization
 
@@ -29,8 +27,8 @@ DT_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
   
   # Loop and update compartments
   for (t in 2:length(Steps)) {
-    S[t] <- S[t-1] - (beta * S[t-1] * I[t-1]) * step_size
-    I[t] <- I[t-1] + (beta * S[t-1] * I[t-1] - gamma * I[t-1]) * step_size
+    S[t] <- S[t-1] - ((beta/N) * S[t-1] * I[t-1]) * step_size
+    I[t] <- I[t-1] + ((beta/N) * S[t-1] * I[t-1] - gamma * I[t-1]) * step_size
     R[t] <- R[t-1] + gamma * I[t-1] * step_size
   }
   
@@ -66,7 +64,7 @@ distance <- function(x, y) {
 
 # Define prior distributions
 prior_dist <- function(n) {
-  beta_samples <- runif(n, 0, 0.001)  # Uniform prior between 0 and 0.001
+  beta_samples <- runif(n, 0, 0.2)  # Uniform prior between 0 and 0.2
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
   return(cbind(beta_samples, gamma_samples))
 }
@@ -135,7 +133,7 @@ grid[row.number, 3]
 ##ABC MCMC begins here
 
 #epsilon <- smallest.distance
-epsilon <- 17
+epsilon <- 16
 
 # Define number of iterations
 num_iterations <- 150000
@@ -156,9 +154,9 @@ for (i in 2:num_iterations) {
   #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = chain[1,], log = TRUE))
   
   
-  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
+  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.2, log = TRUE) + 
     dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
-  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
+  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.2, log = TRUE) + 
     dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
   
   
@@ -210,34 +208,20 @@ max(infection.rate)
 min(recovery.rate)    
 max(recovery.rate)  
 
-#create the contour plot
-x<- seq(0.00003,0.0003, 0.00005)
-
-y<- seq(0.02, 0.1, 0.005)
-
-u <- as.matrix(expand.grid(x, y))
-
-z<- matrix(apply(u, 1, function(v) distance(model(c(v[1], v[2])),Observed_data)),
-           nrow = length(x)) 
-
-filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
-               xlab="Infection rate (Beta)",
-               ylab="Recovery rate (Gamma)",
-               main="Distance metric between observed and simulated data")
 
 #Plots
 par(mfrow=c(2,3)) # Create a 2x3 plotting area
 #par(mar=c(4,2,2,2))
-hist(infection.rate, freq=F, xlab = expression(beta), breaks=25, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
-abline(v=0.0001, col="red", lwd=2,lty=1)
-abline(h=1000, col="blue", lwd=2,lty=1)
-plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0,0.00035))
+hist(infection.rate, freq=F, xlab = expression(beta), breaks=20, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
+abline(v=0.1, col="red", lwd=2,lty=1)
+abline(h=5, col="blue", lwd=2,lty=1)
+plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0,0.3))
 #mtext("(a)", side = 3, line = -26, outer = TRUE)
 plot(infection.rate,recovery.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(beta),ylab=expression(gamma))
 hist(recovery.rate, freq=F, xlab = expression(gamma), breaks=25, main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
 abline(v=0.05, col="red", lwd=2,lty=1)
 abline(h=10, col="blue", lwd=2,lty=1)
-plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.02,0.15))
+plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0,0.15))
 #mtext("(b)", side = 1, line = -1, outer = TRUE)
 plot(recovery.rate,infection.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(gamma),ylab=expression(beta))
 add_legend <- function(...) {
@@ -282,7 +266,8 @@ mean(recovery.rate)
 ci(recovery.rate, method = "HDI")
 ci(recovery.rate, method = "ETI")
 
-##############################################################################################################
+###################################################################################################################
+
 
 #Stochastic SIR
 
@@ -295,36 +280,39 @@ S0 <- 900    # Initial number of susceptibles
 I0 <- 100    # Initial number of infectives
 minTime <- 1
 maxTime <- 365
-beta <- 0.0001    # Infection rate
+beta <- 0.1    # Infection rate
 gamma <- 0.05     # Recovery rate
 step_size <- 1    # Step size for time discretization
 
 # Define the Discrete-Time Stochastic SIR Model
 ST_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
-  Steps <- seq(minTime, maxTime, by = step_size)   # Time discretization
-  S <- numeric(length(Steps))   # Vector to store susceptibles
-  I <- numeric(length(Steps))   # Vector to store infectives
-  R <- numeric(length(Steps))   # Vector to store removed
-  
-  # Assign initial conditions
-  S[1] <- S0
-  I[1] <- I0
-  R[1] <- N - S0 - I0
+  minTime <- minTime           # start time
+  maxTime <- maxTime           # end time
+  step_size <- step_size       # step size
+  Steps <- seq(minTime, maxTime, by = step_size)   # time discretization
+  beta <- beta                 # infection rate
+  gamma <- gamma               # recovery rate
+  S <- numeric(length(Steps))  # create empty vector to store simulations for susceptibles
+  I <- numeric(length(Steps))  # create empty vector to store simulations for infectives
+  R <- numeric(length(Steps))  # create empty vector to store simulations for removed
+  S[1] <- S0                # initial proportion of susceptibles
+  I[1] <- I0                # initial proportion of infectives
+  R[1] <- N - S0 - I0       # initial proportion of Removed
   
   # Loop through discretized time and update the compartments at each step
-  for (t in 2:length(Steps)) {
+  for (tym in 2:length(Steps)) {
     # Assuming infections occur at the point of a Poisson process
-    p_I <- 1 - exp(-(beta) * I[t - 1] * step_size)  # Probability of infection
+    p_I <- 1 - exp(-(beta/N) * I[tym - 1] * step_size)  # Probability of infection
     p_R <- 1 - exp(-gamma * step_size)              # Probability of recovery
     
     # Sample infections and recoveries from a binomial trial
-    delta_S <- rbinom(1, S[t - 1], p_I)
-    delta_I <- rbinom(1, I[t - 1], p_R)
+    delta_S <- rbinom(1, round(S[tym - 1]), p_I)
+    delta_I <- rbinom(1, round(I[tym - 1]), p_R)
     
     # Update the compartments
-    S[t] <- S[t - 1] - delta_S
-    I[t] <- I[t - 1] + delta_S - delta_I
-    R[t] <- R[t - 1] + delta_I
+    S[tym] <- S[tym - 1] - delta_S 
+    I[tym] <- I[tym - 1] + delta_S  - delta_I 
+    R[tym] <- R[tym - 1] + delta_I 
   }
   
   # Actual data on removals (O_t)
@@ -360,7 +348,7 @@ distance <- function(x, y) {
 
 # Define prior distributions
 prior_dist <- function(n) {
-  beta_samples <- runif(n, 0, 0.001)  # Uniform prior between 0 and 0.001
+  beta_samples <- runif(n, 0, 0.2)  # Uniform prior between 0 and 0.2
   gamma_samples <- runif(n, 0, 0.1)     # Uniform prior between 0 and 0.1
   return(cbind(beta_samples, gamma_samples))
 }
@@ -443,16 +431,16 @@ chain[1,]<- c(grid[row.number, 1], grid[row.number, 2])
 # ABC-MCMC algorithm
 for (i in 2:num_iterations) {
   # Generate parameter proposals from the proposal kernels
-  proposed_params <- abs(rnorm(2, chain[i - 1, ], chain[1,]))
+  proposed_params <- abs(rnorm(2, chain[i - 1, ], c(chain[1,1],0.01)))
   
   # M-H probability
   #proposal_proposed <- sum(dnorm(proposed_params, mean = chain[i - 1, ], sd = chain[1,], log = TRUE))
   #proposal_current <- sum(dnorm(chain[i - 1, ], mean = proposed_params, sd = chain[1,], log = TRUE))
   
   
-  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.001, log = TRUE) + 
+  prior_proposed<- dunif(proposed_params[1], min = 0, max = 0.2, log = TRUE) + 
     dunif(proposed_params[2], min = 0, max = 0.1, log = TRUE)
-  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.001, log = TRUE) + 
+  prior_current<- dunif(chain[i - 1, 1], min = 0, max = 0.2, log = TRUE) + 
     dunif(chain[i - 1, 2], min = 0, max = 0.1, log = TRUE) 
   
   
@@ -497,40 +485,20 @@ mean(recovery.rate)
 end_time <- Sys.time()
 end_time - start_time
 
-#Obtaining range of posterior samples
-min(infection.rate)   
-max(infection.rate)   
-min(recovery.rate)    
-max(recovery.rate)  
-
-#create the contour plot
-x<- seq(0.00003,0.0003, 0.00005)
-
-y<- seq(0.02, 0.1, 0.005)
-
-u <- as.matrix(expand.grid(x, y))
-
-z<- matrix(apply(u, 1, function(v) distance(model(c(v[1], v[2])),Observed_data)),
-           nrow = length(x)) 
-
-filled.contour(x,y,z, col=rainbow(39, 1, rev = FALSE), 
-               xlab="Infection rate (Beta)",
-               ylab="Recovery rate (Gamma)",
-               main="Distance metric between observed and simulated data")
 
 #Plots
 par(mfrow=c(2,3)) # Create a 2x3 plotting area
 #par(mar=c(4,2,2,2))
-hist(infection.rate, freq=F, xlab = expression(beta), breaks=22, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
-abline(v=0.0001, col="red", lwd=2,lty=1)
-abline(h=1000, col="blue", lwd=2,lty=1)
-plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0,0.00035))
+hist(infection.rate, freq=F, xlab = expression(beta), breaks=20, main =bquote("Marginal posterior for " * bold(beta)), col = "white", ylab="Density")
+abline(v=0.1, col="red", lwd=2,lty=1)
+abline(h=5, col="blue", lwd=2,lty=1)
+plot(chain[, 1], type = "l", ylab=expression(beta), main =bquote("Trace plot for " * bold(beta)), xlab="MCMC iteration", ylim=c(0.05,0.2))
 #mtext("(a)", side = 3, line = -26, outer = TRUE)
 plot(infection.rate,recovery.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(beta),ylab=expression(gamma))
-hist(recovery.rate, freq=F, xlab = expression(gamma), breaks=22, main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
+hist(recovery.rate, freq=F, xlab = expression(gamma), breaks=20, main =bquote("Marginal posterior for " * bold(gamma)), col = "white",ylab="Density")
 abline(v=0.05, col="red", lwd=2,lty=1)
 abline(h=10, col="blue", lwd=2,lty=1)
-plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.02,0.15))
+plot(chain[, 2], type = "l", ylab=expression(gamma), main =bquote("Trace plot for " * bold(gamma)), xlab="MCMC iteration",ylim=c(0.04,0.14))
 #mtext("(b)", side = 1, line = -1, outer = TRUE)
 plot(recovery.rate,infection.rate,  pch = 16, col = "#00000005", main="Joint posterior", xlab=expression(gamma),ylab=expression(beta))
 add_legend <- function(...) {
@@ -544,6 +512,7 @@ add_legend <- function(...) {
 add_legend("topright", legend=c("True value", "Prior density"), lty=1, 
            col=c("red", "blue"),
            horiz=TRUE, bty='n', cex=1.1)
+
 
 #df<- data.frame(Beta=infection.rate,Gamma=recovery.rate)
 #ggplot(df, aes(Beta, Gamma)) + stat_density_2d(aes(fill = stat(level)), geom = 'polygon') + scale_fill_viridis_c(name = "density") + geom_point(shape = '.') + guides(fill = FALSE)  # This line removes the fill legend

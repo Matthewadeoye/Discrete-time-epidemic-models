@@ -14,8 +14,8 @@ Deterministic_DT_SIR_model <- function(N, S0, I0, minTime, maxTime, beta, gamma,
   
   # Loop and update compartments
   for (t in 2:length(steps)) {
-    S[t] <- S[t-1] - (beta * S[t-1] * I[t-1]) * step_size
-    I[t] <- I[t-1] + (beta * S[t-1] * I[t-1] - gamma * I[t-1]) * step_size
+    S[t] <- S[t-1] - ((beta/N) * S[t-1] * I[t-1]) * step_size
+    I[t] <- I[t-1] + ((beta/N) * S[t-1] * I[t-1] - gamma * I[t-1]) * step_size
     R[t] <- R[t-1] + gamma * I[t-1] * step_size
   }
   
@@ -29,7 +29,7 @@ S0 <- 900   # Initial number of susceptibles
 I0 <- 100   # Initial number of infectives
 minTime <- 1
 maxTime <- 365
-beta <- 0.0001   # Infection rate
+beta <- 0.1   # Infection rate
 gamma <- 0.05    # Recovery rate
 step_size <- 1   # Step size for time discretization
 
@@ -96,7 +96,7 @@ ggplot() +
   scale_color_manual(values = c("Observed removals" = "blue", "Predicted using optimized values" = "red", "Predicted using initial values" = "black")) +
   theme_minimal()
 
-estimated_params  #[1] \beta=9.975941e-05  \gamma=4.881066e-02
+estimated_params  #[1] \beta=0.09975901  \gamma=0.04880698
 
 
 #data.frame(observed_data$Removals, predicted_data$ActualRemovals, Initpredicted_data$ActualRemovals)

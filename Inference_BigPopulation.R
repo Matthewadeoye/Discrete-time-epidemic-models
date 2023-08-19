@@ -239,6 +239,32 @@ add_legend("topright", legend=c("True value", "Prior density"), lty=1,
 #df<- data.frame(Beta=infection.rate,Gamma=recovery.rate)
 #ggplot(df, aes(Beta, Gamma)) + stat_density_2d(aes(fill = stat(level)), geom = 'polygon') + scale_fill_viridis_c(name = "density") + geom_point(shape = '.') + guides(fill = FALSE)  # This line removes the fill legend
 
+# Compute the lower and upper quantiles for the credible interval
+lower_quantile <- quantile(infection.rate, probs = 0.025)  # 2.5th percentile
+upper_quantile <- quantile(infection.rate, probs = 0.975)  # 97.5th percentile
+
+# Compute the 95% credible interval
+Infectioncredible_interval <- c(lower_quantile, upper_quantile)
+
+print(Infectioncredible_interval)
+
+# Compute the lower and upper quantiles for the credible interval
+lower_quantile <- quantile(recovery.rate, probs = 0.025)  # 2.5th percentile
+upper_quantile <- quantile(recovery.rate, probs = 0.975)  # 97.5th percentile
+
+# Compute the 95% credible interval
+Recoverycredible_interval <- c(lower_quantile, upper_quantile)
+
+print(Recoverycredible_interval)
+
+library(bayestestR)
+mean(infection.rate)
+ci(infection.rate, method = "HDI")
+ci(infection.rate, method = "ETI")
+
+mean(recovery.rate)
+ci(recovery.rate, method = "HDI")
+ci(recovery.rate, method = "ETI")
 
 
 ###################################################################################################################
@@ -492,3 +518,30 @@ add_legend("topright", legend=c("True value", "Prior density"), lty=1,
 #ggplot(df, aes(Beta, Gamma)) + stat_density_2d(aes(fill = stat(level)), geom = 'polygon') + scale_fill_viridis_c(name = "density") + geom_point(shape = '.') + guides(fill = FALSE)  # This line removes the fill legend
 
 
+# Compute the lower and upper quantiles for the credible interval
+lower_quantile <- quantile(infection.rate, probs = 0.025)  # 2.5th percentile
+upper_quantile <- quantile(infection.rate, probs = 0.975)  # 97.5th percentile
+
+# Compute the 95% credible interval
+Infectioncredible_interval <- c(lower_quantile, upper_quantile)
+
+print(Infectioncredible_interval)
+
+# Compute the lower and upper quantiles for the credible interval
+lower_quantile <- quantile(recovery.rate, probs = 0.025)  # 2.5th percentile
+upper_quantile <- quantile(recovery.rate, probs = 0.975)  # 97.5th percentile
+
+# Compute the 95% credible interval
+Recoverycredible_interval <- c(lower_quantile, upper_quantile)
+
+print(Recoverycredible_interval)
+
+
+library(bayestestR)
+mean(infection.rate)
+ci(infection.rate, method = "HDI")
+ci(infection.rate, method = "ETI")
+
+mean(recovery.rate)
+ci(recovery.rate, method = "HDI")
+ci(recovery.rate, method = "ETI")
