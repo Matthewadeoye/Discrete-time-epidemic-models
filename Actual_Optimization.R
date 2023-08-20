@@ -1,5 +1,4 @@
 set.seed(8)
-
 # Define the Discrete-Time Deterministic SIR Model
 Deterministic_DT_SIR_model <- function(N, S0, I0, minTime, maxTime, beta, gamma, step_size) {
   steps <- seq(minTime, maxTime, by = step_size) # Time discretization
@@ -40,8 +39,6 @@ observed_data <- data.frame(
   Steps = simulated_data$Steps,
   Removals= c(0, rpois(length(simulated_data$Steps)-1, diff(simulated_data$R))))
 
-
-
 # The objective function (sum of squared differences)
 objective_function <- function(params) {
   beta <- params[1]
@@ -59,17 +56,11 @@ objective_function <- function(params) {
   #Alternatively using RMSE
   #RMSE <- sqrt(mean((c(0, diff(model_data$R)) - observed_data$Removals)^2))
   #return(RMSE)
-  
   return(OLS)
 }
 
 # Perform optimization to estimate model parameters
 initial_params <- c(log(0.0000001), log(0.5))  # Initial parameter values
-#Optim
-opt_result <- optim(par = initial_params, fn = objective_function, method='Nelder-Mead')
-print(opt_result)
-estimated_params <- opt_result$par
-estimated_params<- exp(estimated_params)
 
 #nlm
 #opt_result <- nlm(p = initial_params, f = objective_function)
@@ -77,6 +68,22 @@ estimated_params<- exp(estimated_params)
 #estimated_params <- opt_result$estimate
 #estimated_params<- exp(estimated_params)
 
+#Optim
+opt_result <- optim(par = initial_params, fn = objective_function, method='Nelder-Mead',hessian=TRUE)
+print(opt_result)
+estimated_params <- opt_result$par
+estimated_params<- exp(estimated_params)
+se <- sqrt(diag(solve(opt_result$hessian))) # Standard errors of the estimates
+cbind(estimated_params,se)
+Betaupper<- estimated_params[1]+1.96*se[1]
+Betalower<- estimated_params[1]-1.96*se[1]
+Betainterval<- data.frame(value=estimated_params[1], lower=Betalower, upper=Betaupper)
+Betainterval
+
+Gammaupper<- estimated_params[2]+1.96*se[2]
+Gammalower<- estimated_params[2]-1.96*se[2]
+Gammainterval<- data.frame(value=estimated_params[2],  lower=Gammalower, upper=Gammaupper)
+Gammainterval
 
 # Simulate SIR model using estimated parameters
 predicted_data <- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, estimated_params[1], estimated_params[2], step_size)
@@ -95,8 +102,3 @@ ggplot() +
   labs(x = "Day", y = "Removals", title = "") +
   scale_color_manual(values = c("Observed removals" = "blue", "Predicted using optimized values" = "red", "Predicted using initial values" = "black")) +
   theme_minimal()
-
-estimated_params  #[1] \beta=0.09975901  \gamma=0.04880698
-
-
-#data.frame(observed_data$Removals, predicted_data$ActualRemovals, Initpredicted_data$ActualRemovals)
