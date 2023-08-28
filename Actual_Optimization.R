@@ -73,17 +73,7 @@ opt_result <- optim(par = initial_params, fn = objective_function, method='Nelde
 print(opt_result)
 estimated_params <- opt_result$par
 estimated_params<- exp(estimated_params)
-se <- sqrt(diag(solve(opt_result$hessian))) # Standard errors of the estimates
-cbind(estimated_params,se)
-Betaupper<- estimated_params[1]+1.96*se[1]
-Betalower<- estimated_params[1]-1.96*se[1]
-Betainterval<- data.frame(value=estimated_params[1], lower=Betalower, upper=Betaupper)
-Betainterval
-
-Gammaupper<- estimated_params[2]+1.96*se[2]
-Gammalower<- estimated_params[2]-1.96*se[2]
-Gammainterval<- data.frame(value=estimated_params[2],  lower=Gammalower, upper=Gammaupper)
-Gammainterval
+print(estimated_params)
 
 # Simulate SIR model using estimated parameters
 predicted_data <- Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, estimated_params[1], estimated_params[2], step_size)
@@ -102,3 +92,35 @@ ggplot() +
   labs(x = "Day", y = "Removals", title = "") +
   scale_color_manual(values = c("Observed removals" = "blue", "Predicted using optimized values" = "red", "Predicted using initial values" = "black")) +
   theme_minimal()
+
+
+# 95%CI
+# Calculate the SSE (sum of squared errors)
+squared_errors <- (c(0, diff(Deterministic_DT_SIR_model(N, S0, I0, minTime, maxTime, exp(opt_result$par[1]), exp(opt_result$par[2]), step_size)$R)) - observed_data$Removals)^2
+sse <- sum(squared_errors)
+
+# Calculate degrees of freedom
+n_observations <- length(observed_data$Removals)
+n_parameters <- length(opt_result$par)
+df <- n_observations - n_parameters
+
+# Calculate residual variance
+residual_variance <- sse / df
+residual_sd<- sqrt(residual_variance)
+print(residual_sd)
+
+ols.hessian<- opt_result$hessian/2
+se <- residual_sd * sqrt(diag(solve(ols.hessian))) # Standard errors of the estimates
+cbind(estimated_params,se)
+Betaupper<- estimated_params[1]+1.96*se[1]
+Betalower<- estimated_params[1]-1.96*se[1]
+Betainterval<- data.frame(value=estimated_params[1], lower=Betalower, upper=Betaupper)
+print(Betainterval)
+
+Gammaupper<- estimated_params[2]+1.96*se[2]
+Gammalower<- estimated_params[2]-1.96*se[2]
+Gammainterval<- data.frame(value=estimated_params[2],  lower=Gammalower, upper=Gammaupper)
+print(Gammainterval)
+
+
+
